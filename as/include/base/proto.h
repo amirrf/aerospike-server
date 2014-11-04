@@ -475,13 +475,13 @@ extern int as_msg_swap_fields_and_ops(as_msg *m, void *limit);
 extern int as_msg_send_reply(struct as_file_handle_s *fd_h, uint32_t result_code,
 		uint32_t generation, uint32_t void_time, as_msg_op **ops,
 		struct as_bin_s **bins, uint16_t bin_count, struct as_namespace_s *ns,
-		uint *written_sz, uint64_t trid, const char *setname);
+		uint *written_sz, uint64_t trid, const char *setname, const char *single_bin_name);
 extern int as_msg_send_error(struct as_file_handle_s *fd_h, uint32_t result_code);
 
 extern cl_msg *as_msg_make_response_msg(uint32_t result_code, uint32_t generation,
 		uint32_t void_time, as_msg_op **ops, struct as_bin_s **bins,
 		uint16_t bin_count, struct as_namespace_s *ns, cl_msg *msgp_in,
-		size_t *msg_sz_in, uint64_t trid, const char *setname);
+		size_t *msg_sz_in, uint64_t trid, const char *setname, const char *single_bin_name);
 extern int as_msg_make_response_bufbuilder(struct as_index_s *r, struct as_storage_rd_s *rd,
 		cf_buf_builder **bb_r, bool nobindata, char *nsname, bool use_sets, bool include_key, cf_vector *);
 extern int as_msg_make_error_response_bufbuilder(cf_digest *keyd, int result_code,

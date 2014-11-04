@@ -171,7 +171,7 @@ int _as_particle_tobuf(as_bin *b, byte *buf, uint32_t *sz, bool tojson);
 cl_msg *
 as_msg_make_response_msg( uint32_t result_code, uint32_t generation, uint32_t void_time,
 		as_msg_op **ops, as_bin **bins, uint16_t bin_count, as_namespace *ns,
-		cl_msg *msgp_in, size_t *msg_sz_in, uint64_t trid, const char *setname)
+		cl_msg *msgp_in, size_t *msg_sz_in, uint64_t trid, const char *setname, const char *single_bin_name)
 {
 	int setname_len = 0;
 	// figure out the size of the entire buffer
@@ -179,7 +179,7 @@ as_msg_make_response_msg( uint32_t result_code, uint32_t generation, uint32_t vo
 	msg_sz += sizeof(as_msg_op) * bin_count; // the bin headers
 	for (uint16_t i = 0; i < bin_count; i++) {
 		if (bins[i]) {
-			msg_sz += ns->single_bin ? 0 :
+			msg_sz += (ns->single_bin) ? ((single_bin_name != NULL)? strlen(single_bin_name) : 0) :
 					  strlen(as_bin_get_name_from_id(ns, bins[i]->id));
 			uint32_t psz;
 			if (as_bin_is_hidden(bins[i])) {
@@ -295,7 +295,13 @@ as_msg_make_response_msg( uint32_t result_code, uint32_t generation, uint32_t vo
 
 		if (bins[i]) {
 			op->version = as_bin_get_version(bins[i], ns->single_bin);
-			op->name_sz = as_bin_memcpy_name(ns, op->name, bins[i]);
+			// single-bin namespaces have no bin names, use the provided single_bin_name
+			if (ns->single_bin && (single_bin_name != NULL)) {
+				op->name_sz = strlen(single_bin_name);
+				memcpy(op->name, single_bin_name, op->name_sz);
+			}	else {
+				op->name_sz = as_bin_memcpy_name(ns, op->name, bins[i]);
+			}
 		}
 		else {
 			op->version = 0;
@@ -760,7 +766,8 @@ as_msg_make_error_response_bufbuilder(cf_digest *keyd, int result_code, cf_buf_b
 int
 as_msg_send_reply(as_file_handle *fd_h, uint32_t result_code, uint32_t generation,
 		uint32_t void_time, as_msg_op **ops, as_bin **bins, uint16_t bin_count,
-		as_namespace *ns, uint *written_sz, uint64_t trid, const char *setname)
+		as_namespace *ns, uint *written_sz, uint64_t trid, const char *setname,
+		const char *single_bin_name)
 {
 	int rv = 0;
 
@@ -771,7 +778,7 @@ as_msg_send_reply(as_file_handle *fd_h, uint32_t result_code, uint32_t generatio
 
 	uint8_t *msgp = (uint8_t *) as_msg_make_response_msg( result_code, generation,
 					void_time, ops, bins, bin_count, ns,
-					(cl_msg *)fb, &msg_sz, trid, setname);
+					(cl_msg *)fb, &msg_sz, trid, setname, single_bin_name);
 
 	if (!msgp)	return(-1);
 
@@ -822,7 +829,7 @@ Exit:
 int
 as_msg_send_error(as_file_handle *fd_h, uint32_t result_code)
 {
-	return as_msg_send_reply(fd_h, result_code, 0, 0, NULL, NULL, 0, NULL, NULL, 0, NULL);
+	return as_msg_send_reply(fd_h, result_code, 0, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL);
 }
 
 bool

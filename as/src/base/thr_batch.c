@@ -306,7 +306,7 @@ batch_process_queue(void* q_to_wait_on)
 
 			if (btr.fd_h) {
 				as_msg_send_reply(btr.fd_h, AS_PROTO_RESULT_FAIL_TIMEOUT,
-						0, 0, 0, 0, 0, 0, 0, btr.trid, NULL);
+						0, 0, 0, 0, 0, 0, 0, btr.trid, NULL, NULL);
 				btr.fd_h = 0;
 			}
 			batch_transaction_done(&btr);

@@ -5163,7 +5163,7 @@ void
 single_transaction_response(as_transaction *tr, as_namespace *ns,
 		as_msg_op **ops, as_bin **response_bins, uint16_t n_bins,
 		uint32_t generation, uint32_t void_time, uint *written_sz,
-		char *setname)
+		char *setname, char *single_bin_name)
 {
 
 	cf_detail_digest(AS_RW, NULL, "[ENTER] NS(%s)", ns->name );
@@ -5171,7 +5171,7 @@ single_transaction_response(as_transaction *tr, as_namespace *ns,
 	if (tr->proto_fd_h) {
 		if (0 != as_msg_send_reply(tr->proto_fd_h, tr->result_code,
 				generation, void_time, ops, response_bins, n_bins, ns,
-				written_sz, tr->trid, setname)) {
+				written_sz, tr->trid, setname, single_bin_name)) {
 			cf_info(AS_RW, "rw: can't send reply, fd %d rc %d",
 					tr->proto_fd_h->fd, tr->result_code);
 		}
@@ -5188,7 +5188,7 @@ single_transaction_response(as_transaction *tr, as_namespace *ns,
 
 		as_proxy_send_response(tr->proxy_node, tr->proxy_msg, tr->result_code,
 				generation, void_time, ops, response_bins, n_bins, ns, tr->trid,
-				setname);
+				setname, single_bin_name);
 		tr->proxy_msg = 0;
 	} else {
 		// In this case, this is a call from write_process() above.
@@ -5196,7 +5196,7 @@ single_transaction_response(as_transaction *tr, as_namespace *ns,
 		size_t msg_sz = 0;
 		tr->msgp = as_msg_make_response_msg(tr->result_code, generation,
 				void_time, ops, response_bins, n_bins, ns, (cl_msg *) NULL,
-				&msg_sz, tr->trid, setname);
+				&msg_sz, tr->trid, setname, single_bin_name);
 		cf_debug(AS_RW,
 				"{%s:%d} thr_tsvc_read returns response message for duplicate read  0x%x digest %"PRIx64"",
 				ns->name, tr->rsv.pid, tr->msgp, *(uint64_t *)&tr->keyd);
@@ -5469,7 +5469,7 @@ thr_tsvc_read(as_transaction *tr, as_record_lock *rl, int record_get_rv)
 
 		single_transaction_response(tr, ns, ops, response_bins, n_bins,
 				generation, void_time, &written_sz,
-				(m->info1 & AS_MSG_INFO1_XDR) ? (char *) set_name : NULL);
+				(m->info1 & AS_MSG_INFO1_XDR) ? (char *) set_name : NULL, NULL);
 
 		MICROBENCHMARK_HIST_INSERT_AND_RESET_P(rt_net_hist);
 	}
@@ -5484,7 +5484,7 @@ thr_tsvc_read(as_transaction *tr, as_record_lock *rl, int record_get_rv)
 
 			if (0 != as_msg_send_reply(tr->proto_fd_h, tr->result_code,
 					generation, 0, 0, 0, 0, 0, &written_sz, tr->trid,
-					NULL)) {
+					NULL, NULL)) {
 
 				cf_debug(AS_RW,
 						"tsvc read: can't send short reply, fd %d rc %d",
@@ -5503,7 +5503,7 @@ thr_tsvc_read(as_transaction *tr, as_record_lock *rl, int record_get_rv)
 				cf_detail(AS_RW, "sending proxy reply, rc %d to %"PRIx64"",
 						tr->result_code, tr->proxy_node);
 			as_proxy_send_response(tr->proxy_node, tr->proxy_msg,
-					tr->result_code, 0, 0, 0, 0, 0, 0, tr->trid, NULL);
+					tr->result_code, 0, 0, 0, 0, 0, 0, tr->trid, NULL, NULL);
 		}
 
 		MICROBENCHMARK_HIST_INSERT_P(wt_net_hist);

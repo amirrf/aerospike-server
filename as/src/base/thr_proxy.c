@@ -729,7 +729,7 @@ as_proxy_send_redirect(cf_node dst, msg *m, cf_node rdst)
 int
 as_proxy_send_response(cf_node dst, msg *m, uint32_t result_code, uint32_t generation,
 		uint32_t void_time, as_msg_op **ops, as_bin **bins, uint16_t bin_count,
-		as_namespace *ns, uint64_t trid, const char *setname)
+		as_namespace *ns, uint64_t trid, const char *setname, const char *single_bin_name)
 {
 	uint32_t tid;
 	msg_get_uint32(m, PROXY_FIELD_TID, &tid);
@@ -745,7 +745,7 @@ as_proxy_send_response(cf_node dst, msg *m, uint32_t result_code, uint32_t gener
 
 	size_t msg_sz = 0;
 	cl_msg * msgp = as_msg_make_response_msg(result_code, generation, void_time, ops,
-			bins, bin_count, ns, 0, &msg_sz, trid, setname);
+			bins, bin_count, ns, 0, &msg_sz, trid, setname, single_bin_name);
 
 	msg_set_buf(m, PROXY_FIELD_AS_PROTO, (byte *) msgp, msg_sz, MSG_SET_HANDOFF_MALLOC);
 

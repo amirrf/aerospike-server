@@ -184,7 +184,7 @@ send_response(udf_call *call, const char *key, size_t klen, int vtype, void *val
 
 	single_transaction_response(
 		tr, ns, NULL/*ops*/, &bin, 1,
-		generation, void_time, &written_sz, NULL);
+		generation, void_time, &written_sz, NULL, key);
 
 	// clean up.
 	// TODO: check: is bin_inuse valid only when data_in_memory?
@@ -257,7 +257,7 @@ send_udf_failure(udf_call *call, int vtype, void *val, size_t vlen)
 					// Send an "empty" response, with no failure bin.
 					as_transaction *    tr          = call->transaction;
 					single_transaction_response(tr, tr->rsv.ns, NULL/*ops*/,
-							NULL /*bin*/, 0 /*nbins*/, 0, 0, NULL, NULL);
+							NULL /*bin*/, 0 /*nbins*/, 0, 0, NULL, NULL, NULL);
 					return 0;
 				}
 			}
